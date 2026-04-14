@@ -40,8 +40,21 @@ export async function GET(request: NextRequest) {
 
   const method = params.get("method");
   if (method) {
-    const clean = sanitizeInput(method);
-    results = results.filter((p) => p.discoverymethod === clean);
+    const clean = sanitizeInput(method).toLowerCase();
+    results = results.filter((p) => {
+      const m = p.discoverymethod?.toLowerCase() ?? "";
+      // Handle abbreviations: "Radial Velocity" matches "rv", "Transit Timing Variations" matches "timing"
+      return (
+        m === clean ||
+        m.includes(clean) ||
+        (clean === "radial velocity" && m === "rv") ||
+        (clean === "transit timing variations" && m === "timing") ||
+        (clean === "eclipse timing variations" && m === "timing") ||
+        (clean === "direct imaging" && m === "imaging") ||
+        (clean === "disk kinematics" && m === "disk kinematics") ||
+        (clean === "pulsar timing" && m === "timing")
+      );
+    });
   }
 
   const yearMin = params.get("yearMin");
