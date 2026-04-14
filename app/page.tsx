@@ -1,5 +1,6 @@
 import Link from "next/link";
 import StarField from "@/components/StarField";
+import StatsBar from "@/components/StatsBar";
 
 export default function Home() {
   return (
@@ -40,6 +41,11 @@ export default function Home() {
             Create Account
           </Link>
         </div>
+      </section>
+
+      {/* Live stats */}
+      <section className="relative z-10 mb-16">
+        <StatsBar />
       </section>
 
       {/* Feature cards */}
