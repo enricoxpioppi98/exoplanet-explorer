@@ -14,6 +14,7 @@ import {
 import SaveButton from "./SaveButton";
 import SizeComparison from "./SizeComparison";
 import PlanetImage from "./PlanetImage";
+import NasaImage from "./NasaImage";
 
 export default function PlanetDetailModal({
   planet,
@@ -92,7 +93,7 @@ export default function PlanetDetailModal({
         </div>
 
         <div className="space-y-6 p-6">
-          {/* NASA Artist's Concept Image */}
+          {/* Planet Visual + NASA Image */}
           <PlanetImage
             planetName={planet.pl_name}
             temperature={planet.pl_eqt}
@@ -100,6 +101,7 @@ export default function PlanetDetailModal({
             size="lg"
             className="rounded-xl"
           />
+          <NasaImage planetName={planet.pl_name} />
 
           {/* Size Comparison */}
           <SizeComparison

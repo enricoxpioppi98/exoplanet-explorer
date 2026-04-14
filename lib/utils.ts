@@ -51,3 +51,60 @@ export function getPlanetSizeCategory(earthRadii: number | null): string {
 export function sanitizeInput(input: string): string {
   return input.replace(/[^a-zA-Z0-9 \-_.]/g, "");
 }
+
+// Deterministic hash from string
+export function hashString(str: string): number {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
+
+export function seededRandom(seed: number): () => number {
+  let s = seed;
+  return () => {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    return s / 0x7fffffff;
+  };
+}
+
+// Returns [primary, secondary, tertiary] colors for a planet
+export function getPlanetColors(
+  name: string,
+  temperature: number | null,
+  radius: number | null
+): [string, string, string] {
+  const seed = hashString(name);
+  const rng = seededRandom(seed);
+  const temp = temperature ?? 300;
+  const rad = radius ?? 1;
+
+  let colors: string[];
+  if (rad > 4) {
+    if (temp > 800) {
+      colors = ["#e85d3a", "#c94420", "#a03018", "#d47030", "#8b2010"];
+    } else if (temp > 400) {
+      colors = ["#c9935a", "#a07040", "#d4a870", "#8b6530", "#e0b878"];
+    } else {
+      colors = ["#3a6a9e", "#2850a0", "#5588cc", "#1a3870", "#4070b8"];
+    }
+  } else if (temp < 150) {
+    colors = ["#a0c8e8", "#78a8d0", "#c0ddf0", "#5890b8", "#d8eaf5"];
+  } else if (temp < 250) {
+    colors = ["#4890c0", "#306890", "#68b0d8", "#2060a0", "#88c8e8"];
+  } else if (temp <= 320) {
+    colors = ["#2a7a50", "#1a5a38", "#3aaa68", "#104828", "#50c080"];
+  } else if (temp <= 600) {
+    colors = ["#c08040", "#a06830", "#d89848", "#885020", "#e8a850"];
+  } else if (temp <= 1200) {
+    colors = ["#b84020", "#902818", "#d05830", "#701810", "#e06838"];
+  } else {
+    colors = ["#d03010", "#ff5020", "#a02008", "#ff7040", "#800800"];
+  }
+
+  const c1 = colors[Math.floor(rng() * colors.length)];
+  const c2 = colors[Math.floor(rng() * colors.length)];
+  const c3 = colors[Math.floor(rng() * colors.length)];
+  return [c1, c2, c3];
+}

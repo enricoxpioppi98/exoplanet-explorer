@@ -1,6 +1,6 @@
 "use client";
 
-import { getTempColor } from "@/lib/utils";
+import { getPlanetColors } from "@/lib/utils";
 
 export default function SizeComparison({
   planetRadius,
@@ -13,10 +13,8 @@ export default function SizeComparison({
 }) {
   if (planetRadius == null) return null;
 
-  const tempColor = getTempColor(temperature);
+  const [c1, c2] = getPlanetColors(planetName, temperature, planetRadius);
 
-  // Scale: Earth = 32px diameter, planet scales relative to that
-  // Clamp display between 8px and 160px for visual clarity
   const earthDiameter = 32;
   const planetDiameter = Math.max(8, Math.min(160, earthDiameter * planetRadius));
   const containerHeight = Math.max(80, planetDiameter + 40);
@@ -26,9 +24,7 @@ export default function SizeComparison({
       ? `${(planetRadius * 100).toFixed(0)}% the size of Earth`
       : planetRadius <= 1.1
         ? "Similar in size to Earth"
-        : planetRadius < 2
-          ? `${planetRadius.toFixed(1)}x the size of Earth`
-          : `${planetRadius.toFixed(1)}x the size of Earth`;
+        : `${planetRadius.toFixed(1)}x the size of Earth`;
 
   return (
     <div className="rounded-xl border border-border bg-white/3 p-4">
@@ -39,7 +35,6 @@ export default function SizeComparison({
         className="flex items-center justify-center gap-6"
         style={{ minHeight: containerHeight }}
       >
-        {/* Earth */}
         <div className="flex flex-col items-center gap-2">
           <div
             className="rounded-full"
@@ -53,18 +48,16 @@ export default function SizeComparison({
           <span className="text-xs text-foreground/40">Earth</span>
         </div>
 
-        {/* VS divider */}
         <span className="text-xs font-medium text-foreground/20">vs</span>
 
-        {/* Planet */}
         <div className="flex flex-col items-center gap-2">
           <div
             className="rounded-full transition-all"
             style={{
               width: planetDiameter,
               height: planetDiameter,
-              background: `radial-gradient(circle at 35% 35%, ${tempColor}, ${tempColor}88, ${tempColor}33)`,
-              boxShadow: `0 0 ${Math.max(6, planetDiameter / 4)}px ${tempColor}40`,
+              background: `radial-gradient(circle at 35% 35%, ${c1}, ${c2}88, ${c2}33)`,
+              boxShadow: `0 0 ${Math.max(6, planetDiameter / 4)}px ${c1}40`,
             }}
           />
           <span className="max-w-24 truncate text-xs text-foreground/40">
