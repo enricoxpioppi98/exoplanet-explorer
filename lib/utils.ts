@@ -18,7 +18,9 @@ export function formatMass(earthMasses: number | null): string {
 
 export function formatTemp(kelvin: number | null): string {
   if (kelvin == null) return "Unknown";
-  return `${Math.round(kelvin)} K`;
+  const c = Math.round(kelvin - 273.15);
+  const f = Math.round((kelvin - 273.15) * 9 / 5 + 32);
+  return `${Math.round(kelvin)} K (${c}\u00B0C / ${f}\u00B0F)`;
 }
 
 export function formatPeriod(days: number | null): string {
