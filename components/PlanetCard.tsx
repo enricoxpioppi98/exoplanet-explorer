@@ -33,9 +33,9 @@ export default function PlanetCard({
   return (
     <div
       onClick={onClick}
-      className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border bg-card backdrop-blur-md transition-all hover:-translate-y-1 hover:border-border-hover hover:bg-card-hover"
+      className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border bg-card/50 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-border-hover hover:bg-card-hover hover:shadow-[0_8px_30px_-12px_rgba(59,130,246,0.15)]"
     >
-      {/* NASA Image */}
+      {/* Planet gradient visual */}
       <PlanetImage
         planetName={planet.pl_name}
         temperature={planet.pl_eqt}
@@ -43,12 +43,14 @@ export default function PlanetCard({
         size="sm"
       />
 
-      <div className="p-4">
+      <div className="p-5">
         {/* Header */}
-        <div className="mb-2 flex items-start justify-between">
+        <div className="mb-3 flex items-start justify-between">
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-base font-semibold">{planet.pl_name}</h3>
-            <p className="truncate text-xs text-foreground/50">
+            <h3 className="truncate text-base font-semibold leading-tight">
+              {planet.pl_name}
+            </h3>
+            <p className="mt-0.5 truncate text-xs text-foreground/40">
               {planet.hostname}
               {planet.sy_pnum && planet.sy_pnum > 1
                 ? ` \u00B7 ${planet.sy_pnum} planets`
@@ -63,20 +65,20 @@ export default function PlanetCard({
         </div>
 
         {/* Badges */}
-        <div className="mb-2 flex items-center gap-2">
+        <div className="mb-3 flex flex-wrap items-center gap-1.5">
           <span
-            className="inline-block rounded-full px-2 py-0.5 text-xs font-medium"
+            className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium"
             style={{
-              backgroundColor: `${tempColor}20`,
+              backgroundColor: `${tempColor}15`,
               color: tempColor,
             }}
           >
             {sizeCategory}
           </span>
           <span
-            className="inline-block rounded-full px-2 py-0.5 text-xs font-bold"
+            className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold"
             style={{
-              backgroundColor: `${habitColor}20`,
+              backgroundColor: `${habitColor}15`,
               color: habitColor,
             }}
             title="Habitability Score"
@@ -85,16 +87,16 @@ export default function PlanetCard({
           </span>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-2 text-sm">
+        {/* Stats grid */}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
           <Stat label="Radius" value={formatRadius(planet.pl_rade)} />
           <Stat label="Mass" value={formatMass(planet.pl_bmasse)} />
           <Stat label="Temp" value={formatTemp(planet.pl_eqt)} />
           <Stat label="Period" value={formatPeriod(planet.pl_orbper)} />
         </div>
 
-        {/* Footer */}
-        <div className="mt-2 flex items-center justify-between text-xs text-foreground/40">
+        {/* Footer divider + metadata */}
+        <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-3 text-[11px] text-foreground/30">
           <span>{planet.discoverymethod}</span>
           <span>{planet.disc_year}</span>
         </div>
@@ -106,8 +108,8 @@ export default function PlanetCard({
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-foreground/40">{label}</p>
-      <p className="font-mono text-xs font-medium">{value}</p>
+      <p className="text-[11px] text-foreground/35">{label}</p>
+      <p className="font-mono text-xs font-medium leading-tight">{value}</p>
     </div>
   );
 }

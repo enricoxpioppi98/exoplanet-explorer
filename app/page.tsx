@@ -9,35 +9,38 @@ export default function Home() {
       <StarField />
 
       {/* Hero */}
-      <section className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 text-center">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm text-foreground/70">
+      <section className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-12 pt-20 text-center">
+        <div className="mb-8 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-5 py-2 text-sm text-foreground/70 backdrop-blur-sm">
           <span className="inline-block h-2 w-2 rounded-full bg-temp-habitable animate-pulse" />
           6,000+ confirmed exoplanets
         </div>
 
-        <h1 className="max-w-3xl text-5xl font-bold leading-tight tracking-tight sm:text-7xl">
+        <h1 className="max-w-4xl text-5xl font-bold leading-[1.1] tracking-tight sm:text-7xl lg:text-8xl">
           Explore Worlds{" "}
-          <span className="bg-gradient-to-r from-accent to-temp-habitable bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-accent via-accent to-temp-habitable bg-clip-text text-transparent">
             Beyond Our Own
           </span>
         </h1>
 
-        <p className="mt-6 max-w-xl text-lg text-foreground/60">
+        <p className="mt-8 max-w-2xl text-lg leading-relaxed text-foreground/50 sm:text-xl">
           Search NASA&apos;s Exoplanet Archive. Discover alien worlds from
           scorching hot Jupiters to Earth-like planets in the habitable zone.
           Save your favorites and build your personal catalog.
         </p>
 
-        <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+        <div className="mt-12 flex flex-col gap-4 sm:flex-row">
           <Link
             href="/explore"
-            className="rounded-full bg-accent px-8 py-3 text-sm font-medium text-white transition-all hover:bg-accent/80 hover:shadow-[0_0_24px_rgba(59,130,246,0.3)]"
+            className="group rounded-full bg-accent px-10 py-3.5 text-sm font-semibold text-white transition-all hover:bg-accent/90 hover:shadow-[0_0_32px_rgba(59,130,246,0.4)]"
           >
             Start Exploring
+            <span className="ml-2 inline-block transition-transform group-hover:translate-x-0.5">
+              &rarr;
+            </span>
           </Link>
           <Link
             href="/sign-up"
-            className="rounded-full border border-white/20 px-8 py-3 text-sm font-medium transition-colors hover:bg-white/10"
+            className="rounded-full border border-white/15 px-10 py-3.5 text-sm font-semibold transition-all hover:border-white/30 hover:bg-white/5"
           >
             Create Account
           </Link>
@@ -45,22 +48,25 @@ export default function Home() {
       </section>
 
       {/* Live stats */}
-      <section className="relative z-10 mb-16">
+      <section className="relative z-10 mb-20 px-6">
         <StatsBar />
       </section>
 
       {/* Most Saved Leaderboard */}
-      <section className="relative z-10 mx-auto mb-16 max-w-xl px-4">
-        <h2 className="mb-4 text-center text-lg font-semibold">
-          Most Saved Planets
-        </h2>
-        <div className="rounded-2xl border border-border bg-card p-4 backdrop-blur-md">
+      <section className="relative z-10 mx-auto mb-20 w-full max-w-xl px-6">
+        <div className="mb-6 text-center">
+          <h2 className="text-2xl font-bold">Community Favorites</h2>
+          <p className="mt-2 text-sm text-foreground/40">
+            Most saved planets across all users
+          </p>
+        </div>
+        <div className="rounded-2xl border border-border bg-card/50 p-5 backdrop-blur-md">
           <Leaderboard />
         </div>
       </section>
 
       {/* Feature cards */}
-      <section className="relative z-10 mx-auto grid max-w-5xl gap-6 px-4 pb-24 sm:grid-cols-3">
+      <section className="relative z-10 mx-auto grid max-w-5xl gap-5 px-6 pb-28 sm:grid-cols-3">
         <FeatureCard
           icon="&#128269;"
           title="Search the Archive"
@@ -77,6 +83,11 @@ export default function Home() {
           description="From TRAPPIST-1 to Proxima Centauri — explore planetary systems across the galaxy."
         />
       </section>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-white/5 py-8 text-center text-xs text-foreground/25">
+        Built with Next.js, Clerk, and Supabase. Data from NASA Exoplanet Archive.
+      </footer>
     </div>
   );
 }
@@ -91,10 +102,10 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 backdrop-blur-md transition-all hover:-translate-y-1 hover:border-border-hover hover:bg-card-hover">
-      <div className="mb-3 text-2xl">{icon}</div>
-      <h3 className="mb-2 font-semibold">{title}</h3>
-      <p className="text-sm text-foreground/60">{description}</p>
+    <div className="rounded-2xl border border-border bg-card/50 p-7 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-border-hover hover:bg-card-hover">
+      <div className="mb-4 text-3xl">{icon}</div>
+      <h3 className="mb-2 text-base font-semibold">{title}</h3>
+      <p className="text-sm leading-relaxed text-foreground/50">{description}</p>
     </div>
   );
 }

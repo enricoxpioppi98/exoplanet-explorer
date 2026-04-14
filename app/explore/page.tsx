@@ -154,15 +154,14 @@ export default function ExplorePage() {
     <div className="relative min-h-screen">
       <StarField />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="mb-2 text-2xl font-bold sm:text-3xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Explore Exoplanets
           </h1>
-          <p className="text-sm text-foreground/50">
-            Search NASA&apos;s archive of 6,000+ confirmed worlds beyond our solar
-            system
+          <p className="mt-2 text-sm text-foreground/40">
+            Search 2,000+ confirmed worlds beyond our solar system
           </p>
         </div>
 
@@ -175,14 +174,14 @@ export default function ExplorePage() {
               fill="none"
               stroke="currentColor"
               strokeWidth={2}
-              className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-foreground/40"
+              className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-foreground/30"
             >
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.3-4.3" />
             </svg>
             <input
               type="text"
-              placeholder="Search planets by name (e.g. TRAPPIST, Kepler, Proxima)..."
+              placeholder="Search by name (e.g. TRAPPIST, Kepler, Proxima)..."
               value={filters.search}
               onChange={(e) =>
                 setFilters((f) => ({
@@ -191,13 +190,13 @@ export default function ExplorePage() {
                   preset: null,
                 }))
               }
-              className="w-full rounded-xl border border-border bg-card py-3 pl-12 pr-4 text-sm outline-none transition-colors placeholder:text-foreground/30 focus:border-accent"
+              className="w-full rounded-2xl border border-border bg-card/50 py-3.5 pl-12 pr-4 text-sm outline-none transition-all placeholder:text-foreground/25 focus:border-accent/50 focus:bg-card focus:shadow-[0_0_20px_-6px_rgba(59,130,246,0.15)]"
             />
           </div>
         </div>
 
         {/* Presets + Surprise Me */}
-        <div className="mb-6 flex flex-wrap items-center gap-3">
+        <div className="mb-8 flex flex-wrap items-center gap-2.5">
           <FilterPresets
             activePreset={filters.preset}
             onSelect={setFilters}
@@ -211,9 +210,9 @@ export default function ExplorePage() {
                 setSelectedPlanet(random);
               }
             }}
-            className="rounded-full border border-amber/30 bg-amber/10 px-4 py-1.5 text-sm font-medium text-amber transition-all hover:bg-amber/20"
+            className="rounded-full border border-amber/20 bg-amber/10 px-4 py-1.5 text-sm font-medium text-amber transition-all hover:bg-amber/20 hover:shadow-[0_0_16px_-4px_rgba(245,158,11,0.3)]"
           >
-            Surprise Me
+            &#10024; Surprise Me
           </button>
         </div>
 
@@ -273,11 +272,10 @@ export default function ExplorePage() {
 
           {/* Results */}
           <div className="flex-1">
-            {!loading && (
-              <p className="mb-4 text-sm text-foreground/40">
-                Showing {planets.length} planet
-                {planets.length !== 1 ? "s" : ""}
-                {hasMore ? "+" : ""}
+            {!loading && !error && planets.length > 0 && (
+              <p className="mb-5 text-xs font-medium uppercase tracking-wider text-foreground/30">
+                {planets.length} planet{planets.length !== 1 ? "s" : ""}
+                {hasMore ? " +" : ""}
               </p>
             )}
 
@@ -303,7 +301,7 @@ export default function ExplorePage() {
               />
             ) : (
               <>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                   {planets.map((planet) => (
                     <PlanetCard
                       key={planet.pl_name}

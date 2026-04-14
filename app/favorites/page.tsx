@@ -91,11 +91,11 @@ export default function FavoritesPage() {
     <div className="relative min-h-screen">
       <StarField />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Your Saved Planets</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Your Saved Planets</h1>
             {!loading && (
               <p className="mt-1 text-sm text-foreground/50">
                 {planets.length} planet{planets.length !== 1 ? "s" : ""} in your
@@ -135,7 +135,7 @@ export default function FavoritesPage() {
             }
           />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {sorted.map((planet) => (
               <PlanetCard
                 key={planet.pl_name}

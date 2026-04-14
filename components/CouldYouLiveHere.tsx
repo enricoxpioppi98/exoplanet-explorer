@@ -8,8 +8,8 @@ export default function CouldYouLiveHere({ planet }: { planet: Exoplanet }) {
   const starColor = getStarColor(planet.st_teff);
   const travel = getTravelTime(planet.sy_dist);
 
-  const earthWeight = 70; // kg
-  const earthAge = 25; // years
+  const earthWeight = 70;
+  const earthAge = 25;
 
   const yourWeight =
     gravity != null ? Math.round(earthWeight * gravity) : null;
@@ -30,10 +30,15 @@ export default function CouldYouLiveHere({ planet }: { planet: Exoplanet }) {
       : null;
 
   return (
-    <div className="rounded-xl border border-accent/20 bg-accent/5 p-5">
-      <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-accent">
-        Could You Live Here?
-      </h3>
+    <div className="space-y-5 rounded-2xl border border-accent/15 bg-gradient-to-b from-accent/[0.06] to-transparent p-6">
+      <div>
+        <h3 className="text-sm font-bold uppercase tracking-widest text-accent">
+          Could You Live Here?
+        </h3>
+        <p className="mt-1 text-xs text-foreground/30">
+          What life would feel like on {planet.pl_name}
+        </p>
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         {yourWeight != null && (
@@ -41,7 +46,7 @@ export default function CouldYouLiveHere({ planet }: { planet: Exoplanet }) {
             emoji="&#9878;&#65039;"
             label="Your weight"
             value={`${yourWeight} kg`}
-            detail={`${earthWeight} kg on Earth`}
+            detail={`vs ${earthWeight} kg on Earth`}
           />
         )}
 
@@ -50,7 +55,7 @@ export default function CouldYouLiveHere({ planet }: { planet: Exoplanet }) {
             emoji="&#128197;"
             label="A year lasts"
             value={yearFormatted}
-            detail={yearLength! < 1 ? "Better bring cake often" : undefined}
+            detail={yearLength! < 1 ? "Happy birthday every day!" : undefined}
           />
         )}
 
@@ -59,7 +64,7 @@ export default function CouldYouLiveHere({ planet }: { planet: Exoplanet }) {
             emoji="&#127874;"
             label="You'd be"
             value={`${yourAge} years old`}
-            detail={`${earthAge} Earth years = ${yourAge} planet years`}
+            detail={`${earthAge} Earth years`}
           />
         )}
 
@@ -69,8 +74,10 @@ export default function CouldYouLiveHere({ planet }: { planet: Exoplanet }) {
           value={starColor.label}
           detail={
             <span
-              className="inline-block h-3 w-8 rounded-full"
-              style={{ backgroundColor: starColor.color }}
+              className="mt-1 inline-block h-2.5 w-12 rounded-full"
+              style={{
+                background: `linear-gradient(90deg, ${starColor.color}00, ${starColor.color}, ${starColor.color}00)`,
+              }}
             />
           }
         />
@@ -78,24 +85,26 @@ export default function CouldYouLiveHere({ planet }: { planet: Exoplanet }) {
 
       {/* Travel Time */}
       {travel && (
-        <div className="mt-4 border-t border-white/10 pt-4">
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-foreground/40">
+        <div className="border-t border-white/5 pt-5">
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-widest text-foreground/30">
             How Long to Get There?
           </h4>
           <div className="grid gap-2 sm:grid-cols-3">
             <TravelItem
-              label="At light speed"
+              icon="&#9889;"
+              label="Light speed"
               value={travel.light}
             />
             <TravelItem
-              label="Parker Solar Probe"
+              icon="&#128640;"
+              label="Parker Probe"
               value={travel.probe}
-              detail="Fastest spacecraft ever"
+              detail="Fastest spacecraft"
             />
             <TravelItem
+              icon="&#128752;"
               label="Voyager 1"
               value={travel.voyager}
-              detail="61,500 km/h"
             />
           </div>
         </div>
@@ -116,35 +125,41 @@ function StatItem({
   detail?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg bg-white/3 px-3 py-2.5">
-      <div className="flex items-center gap-2">
-        <span className="text-lg">{emoji}</span>
-        <div>
-          <p className="text-xs text-foreground/40">{label}</p>
-          <p className="font-mono text-sm font-semibold">{value}</p>
-          {detail && (
-            <p className="mt-0.5 text-xs text-foreground/30">{detail}</p>
-          )}
-        </div>
+    <div className="flex items-start gap-3 rounded-xl bg-white/[0.03] px-4 py-3">
+      <span className="mt-0.5 text-xl">{emoji}</span>
+      <div>
+        <p className="text-[11px] font-medium uppercase tracking-wider text-foreground/35">
+          {label}
+        </p>
+        <p className="font-mono text-base font-semibold leading-tight">
+          {value}
+        </p>
+        {detail && (
+          <div className="mt-1 text-xs text-foreground/25">{detail}</div>
+        )}
       </div>
     </div>
   );
 }
 
 function TravelItem({
+  icon,
   label,
   value,
   detail,
 }: {
+  icon: string;
   label: string;
   value: string;
   detail?: string;
 }) {
   return (
-    <div className="rounded-lg bg-white/3 px-3 py-2">
-      <p className="text-xs text-foreground/40">{label}</p>
-      <p className="font-mono text-sm font-semibold">{value}</p>
-      {detail && <p className="text-[10px] text-foreground/25">{detail}</p>}
+    <div className="rounded-xl bg-white/[0.03] px-4 py-3">
+      <p className="text-[11px] text-foreground/35">
+        {icon} {label}
+      </p>
+      <p className="font-mono text-sm font-bold leading-tight">{value}</p>
+      {detail && <p className="mt-0.5 text-[10px] text-foreground/20">{detail}</p>}
     </div>
   );
 }

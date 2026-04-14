@@ -22,25 +22,25 @@ export default function NavBar() {
 
   function navLinkClass(path: string) {
     const isActive = pathname === path;
-    return `text-sm transition-colors ${
+    return `relative text-sm font-medium transition-colors ${
       isActive
-        ? "text-foreground font-medium"
-        : "text-foreground/50 hover:text-foreground"
+        ? "text-foreground"
+        : "text-foreground/40 hover:text-foreground/70"
     }`;
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-background/70 backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
-          className="flex items-center gap-2 text-lg font-semibold transition-opacity hover:opacity-80"
+          className="flex items-center gap-2.5 text-base font-bold tracking-tight transition-opacity hover:opacity-80"
         >
-          <span className="text-2xl">&#127759;</span>
+          <span className="text-xl">&#127759;</span>
           <span className="hidden sm:inline">Exoplanet Explorer</span>
         </Link>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-7">
           <Link href="/explore" className={navLinkClass("/explore")}>
             Explore
           </Link>
@@ -49,7 +49,7 @@ export default function NavBar() {
               <Link href="/favorites" className={navLinkClass("/favorites")}>
                 Favorites
                 {favCount > 0 && (
-                  <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent/20 px-1.5 text-xs font-medium text-accent">
+                  <span className="ml-1.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent/20 px-1 text-[10px] font-bold tabular-nums text-accent">
                     {favCount}
                   </span>
                 )}
@@ -58,7 +58,7 @@ export default function NavBar() {
             </>
           ) : (
             <SignInButton mode="modal">
-              <button className="rounded-full border border-white/20 px-4 py-1.5 text-sm transition-colors hover:bg-white/10">
+              <button className="rounded-full bg-white/[0.06] px-5 py-1.5 text-sm font-medium transition-all hover:bg-white/10">
                 Sign In
               </button>
             </SignInButton>
