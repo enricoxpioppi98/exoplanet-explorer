@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import dynamic from "next/dynamic";
 import type { Exoplanet } from "@/lib/types";
 import {
   formatRadius,
@@ -14,8 +13,7 @@ import {
 } from "@/lib/utils";
 import SaveButton from "./SaveButton";
 import SizeComparison from "./SizeComparison";
-
-const Planet3D = dynamic(() => import("./Planet3D"), { ssr: false });
+import PlanetImage from "./PlanetImage";
 
 export default function PlanetDetailModal({
   planet,
@@ -94,18 +92,14 @@ export default function PlanetDetailModal({
         </div>
 
         <div className="space-y-6 p-6">
-          {/* 3D Planet Model */}
-          <div className="flex flex-col items-center">
-            <Planet3D
-              temperature={planet.pl_eqt}
-              radius={planet.pl_rade}
-              planetName={planet.pl_name}
-              className="h-56 w-56 sm:h-64 sm:w-64"
-            />
-            <p className="mt-2 text-xs text-foreground/30">
-              Drag to rotate · Scroll to zoom
-            </p>
-          </div>
+          {/* NASA Artist's Concept Image */}
+          <PlanetImage
+            planetName={planet.pl_name}
+            temperature={planet.pl_eqt}
+            radius={planet.pl_rade}
+            size="lg"
+            className="rounded-xl"
+          />
 
           {/* Size Comparison */}
           <SizeComparison

@@ -5,6 +5,7 @@ const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/api/exoplanets(.*)",
+  "/api/planet-image(.*)",
   "/explore(.*)",
 ]);
 
