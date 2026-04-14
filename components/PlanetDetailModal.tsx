@@ -21,6 +21,8 @@ import CouldYouLiveHere from "./CouldYouLiveHere";
 import SimilarPlanets from "./SimilarPlanets";
 import ShareButton from "./ShareButton";
 import EarthComparison from "./EarthComparison";
+import OrbitSimulator from "./OrbitSimulator";
+import SystemView from "./SystemView";
 
 export default function PlanetDetailModal({
   planet,
@@ -143,6 +145,18 @@ export default function PlanetDetailModal({
             planetName={planet.pl_name}
             temperature={planet.pl_eqt}
           />
+
+          {/* Orbit Simulator */}
+          <OrbitSimulator planet={planet} />
+
+          {/* System View (for multi-planet systems) */}
+          {onSelectPlanet && (
+            <SystemView
+              hostname={planet.hostname}
+              currentPlanet={planet.pl_name}
+              onSelect={onSelectPlanet}
+            />
+          )}
 
           {/* What if Earth Was Here? */}
           <EarthComparison planet={planet} />

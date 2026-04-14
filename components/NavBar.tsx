@@ -44,6 +44,9 @@ export default function NavBar() {
           <Link href="/explore" className={navLinkClass("/explore")}>
             Explore
           </Link>
+          <Link href="/builder" className={navLinkClass("/builder")}>
+            Builder
+          </Link>
           {isSignedIn ? (
             <>
               <Link href="/favorites" className={navLinkClass("/favorites")}>

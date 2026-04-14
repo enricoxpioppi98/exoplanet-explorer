@@ -7,6 +7,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/exoplanets(.*)",
   "/api/leaderboard(.*)",
   "/explore(.*)",
+  "/builder(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
