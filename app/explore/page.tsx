@@ -39,6 +39,8 @@ export default function ExplorePage() {
     if (f.radiusMax) params.set("radiusMax", f.radiusMax);
     if (f.tempMin) params.set("tempMin", f.tempMin);
     if (f.tempMax) params.set("tempMax", f.tempMax);
+    if (f.habitMin) params.set("habitMin", f.habitMin);
+    if (f.habitMin) params.set("sort", "habitability");
     if (f.preset) params.set("preset", f.preset);
     params.set("limit", String(limit));
     return params;

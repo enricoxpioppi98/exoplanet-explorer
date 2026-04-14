@@ -38,6 +38,13 @@ export const FILTER_PRESETS = {
       yearMin: "2023",
     },
   },
+  mostHabitable: {
+    label: "Most Habitable",
+    description: "Planets with the highest habitability scores",
+    params: {
+      habitMin: "50",
+    },
+  },
   nearby: {
     label: "Nearby Stars",
     description: "Planets within 30 parsecs of Earth",

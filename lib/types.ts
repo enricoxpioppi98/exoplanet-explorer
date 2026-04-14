@@ -52,6 +52,7 @@ export interface FilterState {
   radiusMax: string;
   tempMin: string;
   tempMax: string;
+  habitMin: string;
   preset: string | null;
 }
 
@@ -64,5 +65,6 @@ export const defaultFilters: FilterState = {
   radiusMax: "",
   tempMin: "",
   tempMax: "",
+  habitMin: "",
   preset: null,
 };

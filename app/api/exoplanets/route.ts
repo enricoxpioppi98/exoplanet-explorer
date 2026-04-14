@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { sanitizeInput } from "@/lib/utils";
+import { sanitizeInput, getHabitabilityScore } from "@/lib/utils";
 import type { Exoplanet } from "@/lib/types";
 import fallbackData from "@/lib/fallback-exoplanet-data.json";
 
@@ -109,6 +109,19 @@ export async function GET(request: NextRequest) {
         p.pl_eqt != null &&
         p.pl_eqt >= 200 &&
         p.pl_eqt <= 320
+    );
+  }
+
+  const habitMin = params.get("habitMin");
+  if (habitMin) {
+    const min = parseInt(habitMin);
+    results = results.filter((p) => getHabitabilityScore(p) >= min);
+  }
+
+  const sortBy = params.get("sort");
+  if (sortBy === "habitability") {
+    results = [...results].sort(
+      (a, b) => getHabitabilityScore(b) - getHabitabilityScore(a)
     );
   }
 

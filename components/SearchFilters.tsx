@@ -23,7 +23,8 @@ export default function SearchFilters({
     filters.radiusMin ||
     filters.radiusMax ||
     filters.tempMin ||
-    filters.tempMax;
+    filters.tempMax ||
+    filters.habitMin;
 
   return (
     <div className="space-y-4">
@@ -129,6 +130,29 @@ export default function SearchFilters({
             onChange={(e) => update({ tempMax: e.target.value })}
             className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
           />
+        </div>
+      </div>
+
+      {/* Habitability Score */}
+      <div>
+        <label className="mb-1.5 block text-xs font-medium text-foreground/50">
+          Min Habitability Score
+        </label>
+        <div className="flex items-center gap-3">
+          <input
+            type="range"
+            min="0"
+            max="90"
+            step="10"
+            value={filters.habitMin || "0"}
+            onChange={(e) =>
+              update({ habitMin: e.target.value === "0" ? "" : e.target.value })
+            }
+            className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-accent"
+          />
+          <span className="w-8 text-right font-mono text-xs text-foreground/60">
+            {filters.habitMin || "0"}
+          </span>
         </div>
       </div>
 
