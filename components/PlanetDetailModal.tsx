@@ -15,6 +15,8 @@ import SaveButton from "./SaveButton";
 import SizeComparison from "./SizeComparison";
 import PlanetImage from "./PlanetImage";
 import NasaImage from "./NasaImage";
+import CouldYouLiveHere from "./CouldYouLiveHere";
+import { getHabitabilityScore, getHabitabilityColor } from "@/lib/utils";
 
 export default function PlanetDetailModal({
   planet,
@@ -28,6 +30,8 @@ export default function PlanetDetailModal({
   onClose: () => void;
 }) {
   const tempColor = getTempColor(planet.pl_eqt);
+  const habitScore = getHabitabilityScore(planet);
+  const habitColor = getHabitabilityColor(habitScore);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -68,6 +72,15 @@ export default function PlanetDetailModal({
               >
                 {getPlanetSizeCategory(planet.pl_rade)}
               </span>
+              <span
+                className="rounded-full px-3 py-1 text-xs font-bold"
+                style={{
+                  backgroundColor: `${habitColor}20`,
+                  color: habitColor,
+                }}
+              >
+                Habitability: {habitScore}/100
+              </span>
             </div>
             <p className="mt-1 text-foreground/50">
               Orbiting {planet.hostname}
@@ -102,6 +115,9 @@ export default function PlanetDetailModal({
             className="rounded-xl"
           />
           <NasaImage planetName={planet.pl_name} />
+
+          {/* Could You Live Here? + Travel Time */}
+          <CouldYouLiveHere planet={planet} />
 
           {/* Size Comparison */}
           <SizeComparison

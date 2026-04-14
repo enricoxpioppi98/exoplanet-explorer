@@ -52,6 +52,96 @@ export function sanitizeInput(input: string): string {
   return input.replace(/[^a-zA-Z0-9 \-_.]/g, "");
 }
 
+// Habitability score 0-100
+export function getHabitabilityScore(planet: {
+  pl_rade: number | null;
+  pl_eqt: number | null;
+  pl_bmasse: number | null;
+  pl_orbper: number | null;
+  sy_dist: number | null;
+}): number {
+  let score = 0;
+
+  // Radius similarity to Earth (1.0): 30 pts max
+  if (planet.pl_rade != null) {
+    const diff = Math.abs(planet.pl_rade - 1.0);
+    score += Math.max(0, 30 - diff * 20);
+  }
+
+  // Temperature similarity to 288K: 30 pts max
+  if (planet.pl_eqt != null) {
+    const diff = Math.abs(planet.pl_eqt - 288);
+    score += Math.max(0, 30 - diff * 0.2);
+  }
+
+  // Has known mass: 10 pts
+  if (planet.pl_bmasse != null) score += 10;
+
+  // Atmosphere potential (radius > 0.5 Earth): 10 pts
+  if (planet.pl_rade != null && planet.pl_rade >= 0.5) score += 10;
+
+  // Not tidally locked (period > 1 day): 10 pts
+  if (planet.pl_orbper != null && planet.pl_orbper > 1) score += 10;
+
+  // Reachable (< 100 parsecs): 10 pts
+  if (planet.sy_dist != null && planet.sy_dist < 100) score += 10;
+
+  return Math.round(Math.min(100, Math.max(0, score)));
+}
+
+export function getHabitabilityColor(score: number): string {
+  if (score >= 70) return "#34D399";
+  if (score >= 40) return "#FBBF24";
+  return "#EF4444";
+}
+
+// Surface gravity relative to Earth
+export function getSurfaceGravity(
+  mass: number | null,
+  radius: number | null
+): number | null {
+  if (mass == null || radius == null || radius === 0) return null;
+  return mass / (radius * radius);
+}
+
+// Star color based on effective temperature
+export function getStarColor(teff: number | null): {
+  color: string;
+  label: string;
+} {
+  if (teff == null) return { color: "#fff8e0", label: "Unknown" };
+  if (teff < 3500) return { color: "#ff6030", label: "Deep red" };
+  if (teff < 5000) return { color: "#ffa040", label: "Orange" };
+  if (teff < 6000) return { color: "#fff4d0", label: "Yellow-white" };
+  if (teff < 7500) return { color: "#f0f0ff", label: "White" };
+  return { color: "#a0c0ff", label: "Blue-white" };
+}
+
+// Travel time in years given distance in parsecs
+export function getTravelTime(
+  distParsecs: number | null
+): { light: string; probe: string; voyager: string } | null {
+  if (distParsecs == null) return null;
+  const distKm = distParsecs * 3.086e13;
+  const lightSpeedKmH = 299792 * 3600;
+  const parkerKmH = 635266;
+  const voyagerKmH = 61500;
+
+  const lightYears = distKm / lightSpeedKmH / 8766;
+  const probeYears = distKm / parkerKmH / 8766;
+  const voyagerYears = distKm / voyagerKmH / 8766;
+
+  const fmt = (y: number) => {
+    if (y < 1) return `${Math.round(y * 12)} months`;
+    if (y < 1000) return `${y.toFixed(1)} years`;
+    if (y < 1e6) return `${(y / 1000).toFixed(0)}K years`;
+    if (y < 1e9) return `${(y / 1e6).toFixed(1)}M years`;
+    return `${(y / 1e9).toFixed(1)}B years`;
+  };
+
+  return { light: fmt(lightYears), probe: fmt(probeYears), voyager: fmt(voyagerYears) };
+}
+
 // Deterministic hash from string
 export function hashString(str: string): number {
   let h = 0;

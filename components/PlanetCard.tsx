@@ -8,6 +8,8 @@ import {
   formatPeriod,
   getTempColor,
   getPlanetSizeCategory,
+  getHabitabilityScore,
+  getHabitabilityColor,
 } from "@/lib/utils";
 import SaveButton from "./SaveButton";
 import PlanetImage from "./PlanetImage";
@@ -25,6 +27,8 @@ export default function PlanetCard({
 }) {
   const tempColor = getTempColor(planet.pl_eqt);
   const sizeCategory = getPlanetSizeCategory(planet.pl_rade);
+  const habitScore = getHabitabilityScore(planet);
+  const habitColor = getHabitabilityColor(habitScore);
 
   return (
     <div
@@ -58,8 +62,8 @@ export default function PlanetCard({
           />
         </div>
 
-        {/* Badge */}
-        <div className="mb-2">
+        {/* Badges */}
+        <div className="mb-2 flex items-center gap-2">
           <span
             className="inline-block rounded-full px-2 py-0.5 text-xs font-medium"
             style={{
@@ -68,6 +72,16 @@ export default function PlanetCard({
             }}
           >
             {sizeCategory}
+          </span>
+          <span
+            className="inline-block rounded-full px-2 py-0.5 text-xs font-bold"
+            style={{
+              backgroundColor: `${habitColor}20`,
+              color: habitColor,
+            }}
+            title="Habitability Score"
+          >
+            {habitScore}/100
           </span>
         </div>
 

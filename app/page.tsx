@@ -1,6 +1,7 @@
 import Link from "next/link";
 import StarField from "@/components/StarField";
 import StatsBar from "@/components/StatsBar";
+import Leaderboard from "@/components/Leaderboard";
 
 export default function Home() {
   return (
@@ -46,6 +47,16 @@ export default function Home() {
       {/* Live stats */}
       <section className="relative z-10 mb-16">
         <StatsBar />
+      </section>
+
+      {/* Most Saved Leaderboard */}
+      <section className="relative z-10 mx-auto mb-16 max-w-xl px-4">
+        <h2 className="mb-4 text-center text-lg font-semibold">
+          Most Saved Planets
+        </h2>
+        <div className="rounded-2xl border border-border bg-card p-4 backdrop-blur-md">
+          <Leaderboard />
+        </div>
       </section>
 
       {/* Feature cards */}

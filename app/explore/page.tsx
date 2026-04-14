@@ -196,12 +196,25 @@ export default function ExplorePage() {
           </div>
         </div>
 
-        {/* Presets */}
-        <div className="mb-6">
+        {/* Presets + Surprise Me */}
+        <div className="mb-6 flex flex-wrap items-center gap-3">
           <FilterPresets
             activePreset={filters.preset}
             onSelect={setFilters}
           />
+          <button
+            onClick={async () => {
+              const res = await fetch("/api/exoplanets?limit=200");
+              const data = await res.json();
+              if (Array.isArray(data) && data.length > 0) {
+                const random = data[Math.floor(Math.random() * data.length)];
+                setSelectedPlanet(random);
+              }
+            }}
+            className="rounded-full border border-amber/30 bg-amber/10 px-4 py-1.5 text-sm font-medium text-amber transition-all hover:bg-amber/20"
+          >
+            Surprise Me
+          </button>
         </div>
 
         <div className="flex gap-6">
