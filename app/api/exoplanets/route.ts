@@ -55,7 +55,14 @@ export async function GET(request: NextRequest) {
   const url = `${NASA_TAP_URL}?query=${query}&format=json`;
 
   try {
-    const response = await fetch(url, { next: { revalidate: 3600 } });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
+    const response = await fetch(url, {
+      signal: controller.signal,
+      next: { revalidate: 3600 },
+    });
+    clearTimeout(timeout);
 
     if (!response.ok) {
       return Response.json(
@@ -68,8 +75,8 @@ export async function GET(request: NextRequest) {
     return Response.json(data);
   } catch {
     return Response.json(
-      { error: "Failed to fetch exoplanet data" },
-      { status: 500 }
+      { error: "NASA API is currently slow. Please try again in a moment." },
+      { status: 504 }
     );
   }
 }

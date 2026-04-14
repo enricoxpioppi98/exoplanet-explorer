@@ -24,6 +24,7 @@ export default function ExplorePage() {
   const [hasMore, setHasMore] = useState(false);
   const [selectedPlanet, setSelectedPlanet] = useState<Exoplanet | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   const buildParams = useCallback((f: FilterState, limit: number) => {
@@ -45,6 +46,7 @@ export default function ExplorePage() {
     async (f: FilterState) => {
       setLoading(true);
       setHasMore(false);
+      setError(null);
       try {
         const params = buildParams(f, PAGE_SIZE + 1);
         const res = await fetch(`/api/exoplanets?${params}`);
@@ -52,10 +54,14 @@ export default function ExplorePage() {
         if (Array.isArray(data)) {
           setHasMore(data.length > PAGE_SIZE);
           setPlanets(data.slice(0, PAGE_SIZE));
+        } else if (data?.error) {
+          setError(data.error);
+          setPlanets([]);
         } else {
           setPlanets([]);
         }
       } catch {
+        setError("Could not connect to the server. Please try again.");
         setPlanets([]);
       } finally {
         setLoading(false);
@@ -264,6 +270,19 @@ export default function ExplorePage() {
 
             {loading ? (
               <LoadingSkeleton />
+            ) : error ? (
+              <EmptyState
+                title="NASA API is slow right now"
+                description={error}
+                action={
+                  <button
+                    onClick={() => fetchPlanets(filters)}
+                    className="rounded-full bg-accent px-6 py-2.5 text-sm font-medium text-white transition-all hover:bg-accent/80"
+                  >
+                    Try Again
+                  </button>
+                }
+              />
             ) : planets.length === 0 ? (
               <EmptyState
                 title="No planets found"
