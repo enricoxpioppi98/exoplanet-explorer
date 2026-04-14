@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import type { Exoplanet } from "@/lib/types";
 import {
@@ -12,6 +13,7 @@ import {
   getPlanetSizeCategory,
 } from "@/lib/utils";
 import SaveButton from "./SaveButton";
+import SizeComparison from "./SizeComparison";
 
 const Planet3D = dynamic(() => import("./Planet3D"), { ssr: false });
 
@@ -27,6 +29,18 @@ export default function PlanetDetailModal({
   onClose: () => void;
 }) {
   const tempColor = getTempColor(planet.pl_eqt);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
 
   return (
     <div
@@ -92,6 +106,13 @@ export default function PlanetDetailModal({
               Drag to rotate · Scroll to zoom
             </p>
           </div>
+
+          {/* Size Comparison */}
+          <SizeComparison
+            planetRadius={planet.pl_rade}
+            planetName={planet.pl_name}
+            temperature={planet.pl_eqt}
+          />
 
           {/* Planet Properties */}
           <Section title="Planet Properties">
