@@ -1,36 +1,67 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import type { Exoplanet } from "@/lib/types";
-import { getTempColor, getPlanetColors } from "@/lib/utils";
+import { getPlanetColors } from "@/lib/utils";
+
+// Solve Kepler's equation M = E - e*sin(E) using Newton-Raphson
+function solveKepler(M: number, e: number): number {
+  let E = M;
+  for (let i = 0; i < 20; i++) {
+    const dE = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+    E -= dE;
+    if (Math.abs(dE) < 1e-8) break;
+  }
+  return E;
+}
+
+// True anomaly from eccentric anomaly
+function trueAnomaly(E: number, e: number): number {
+  return 2 * Math.atan2(
+    Math.sqrt(1 + e) * Math.sin(E / 2),
+    Math.sqrt(1 - e) * Math.cos(E / 2)
+  );
+}
+
+// Radius at true anomaly for an elliptical orbit
+function orbitRadius(a: number, e: number, theta: number): number {
+  return (a * (1 - e * e)) / (1 + e * Math.cos(theta));
+}
 
 export default function OrbitSimulator({ planet }: { planet: Exoplanet }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
   const [speed, setSpeed] = useState(1);
-  const [time, setTime] = useState(0);
   const timeRef = useRef(0);
   const speedRef = useRef(1);
   speedRef.current = speed;
+  const [paused, setPaused] = useState(false);
+  const pausedRef = useRef(false);
+  pausedRef.current = paused;
 
-  const period = planet.pl_orbper ?? 10;
+  const [info, setInfo] = useState({ orbits: 0, days: 0, distAU: 0, atPeri: false });
+
+  const period = planet.pl_orbper ?? 10; // days
+  const ecc = planet.pl_orbeccen ?? 0.02; // eccentricity
+  const sma = planet.pl_orbsmax ?? 1; // semi-major axis AU
   const starTemp = planet.st_teff ?? 5778;
   const starRad = planet.st_rad ?? 1;
   const planetRad = planet.pl_rade ?? 1;
   const [c1] = getPlanetColors(planet.pl_name, planet.pl_eqt, planet.pl_rade);
 
-  // Star color from temperature
   const starColor =
     starTemp < 3500 ? "#ff6030" :
     starTemp < 5000 ? "#ffa050" :
     starTemp < 6000 ? "#fff4d0" :
     starTemp < 7500 ? "#f0f0ff" : "#a0c0ff";
 
-  // Habitable zone inner/outer (simplified, relative to orbit)
-  const habInner = 0.56;
-  const habOuter = 0.88;
+  // Habitable zone bounds (simplified: sqrt(L) scaling)
+  // L ~ (R_star)^2 * (T_star/5778)^4
+  const luminosity = Math.pow(starRad, 2) * Math.pow(starTemp / 5778, 4);
+  const habInnerAU = 0.75 * Math.sqrt(luminosity);
+  const habOuterAU = 1.77 * Math.sqrt(luminosity);
 
-  useEffect(() => {
+  const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -38,132 +69,262 @@ export default function OrbitSimulator({ planet }: { planet: Exoplanet }) {
 
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
+    if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const w = rect.width;
     const h = rect.height;
-    const cx = w / 2;
+
+    // Determine scale: fit the orbit + some margin
+    // aphelion = sma * (1 + ecc)
+    const aphelion = sma * (1 + ecc);
+    const maxExtent = Math.max(aphelion, habOuterAU) * 1.15;
+    const scale = Math.min(w, h) * 0.42 / Math.max(maxExtent, 0.01);
+
+    // Star at focus, not center of ellipse
+    // Focus offset from center = sma * ecc
+    const focusOffsetPx = sma * ecc * scale;
+    const cx = w / 2 + focusOffsetPx; // star position
     const cy = h / 2;
+    // Ellipse center
+    const ellCx = w / 2;
+    const ellCy = h / 2;
 
-    let lastTime = performance.now();
+    ctx.clearRect(0, 0, w, h);
 
-    function draw(now: number) {
-      const dt = (now - lastTime) / 1000;
-      lastTime = now;
-      timeRef.current += dt * speedRef.current;
-      setTime(timeRef.current);
+    // Habitable zone (centered on star)
+    if (habOuterAU * scale > 10) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, habOuterAU * scale, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(52, 211, 153, 0.04)";
+      ctx.fill();
 
-      ctx!.clearRect(0, 0, w, h);
+      ctx.beginPath();
+      ctx.arc(cx, cy, habInnerAU * scale, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(5, 5, 16, 0.95)";
+      ctx.fill();
 
-      const orbitRadius = Math.min(cx, cy) * 0.7;
-
-      // Habitable zone
-      ctx!.beginPath();
-      ctx!.arc(cx, cy, orbitRadius * habOuter * 1.3, 0, Math.PI * 2);
-      ctx!.fillStyle = "rgba(52, 211, 153, 0.04)";
-      ctx!.fill();
-      ctx!.beginPath();
-      ctx!.arc(cx, cy, orbitRadius * habInner * 1.3, 0, Math.PI * 2);
-      ctx!.fillStyle = "#050510";
-      ctx!.fill();
-
-      // Habitable zone label
-      ctx!.font = "10px system-ui";
-      ctx!.fillStyle = "rgba(52, 211, 153, 0.3)";
-      ctx!.fillText("Habitable Zone", cx + orbitRadius * habOuter * 1.3 * 0.6, cy - orbitRadius * habOuter * 1.3 * 0.7);
-
-      // Orbit path
-      ctx!.beginPath();
-      ctx!.arc(cx, cy, orbitRadius, 0, Math.PI * 2);
-      ctx!.strokeStyle = "rgba(255,255,255,0.08)";
-      ctx!.lineWidth = 1;
-      ctx!.stroke();
-
-      // Star glow
-      const gradient = ctx!.createRadialGradient(cx, cy, 0, cx, cy, 30 + starRad * 8);
-      gradient.addColorStop(0, starColor);
-      gradient.addColorStop(0.3, starColor + "80");
-      gradient.addColorStop(1, "transparent");
-      ctx!.beginPath();
-      ctx!.arc(cx, cy, 30 + starRad * 8, 0, Math.PI * 2);
-      ctx!.fillStyle = gradient;
-      ctx!.fill();
-
-      // Star body
-      ctx!.beginPath();
-      ctx!.arc(cx, cy, 6 + starRad * 4, 0, Math.PI * 2);
-      ctx!.fillStyle = starColor;
-      ctx!.fill();
-
-      // Planet position
-      const angle = (timeRef.current / Math.max(period, 0.01)) * Math.PI * 2;
-      const px = cx + Math.cos(angle) * orbitRadius;
-      const py = cy + Math.sin(angle) * orbitRadius;
-
-      // Planet shadow (simple)
-      const shadowGrad = ctx!.createRadialGradient(px - 1, py - 1, 0, px, py, 4 + planetRad * 2.5);
-      shadowGrad.addColorStop(0, c1 + "dd");
-      shadowGrad.addColorStop(1, c1 + "33");
-      ctx!.beginPath();
-      ctx!.arc(px, py, 4 + planetRad * 2.5, 0, Math.PI * 2);
-      ctx!.fillStyle = shadowGrad;
-      ctx!.fill();
-
-      // Planet trail (faint)
-      for (let i = 1; i <= 15; i++) {
-        const trailAngle = angle - (i * 0.02);
-        const tx = cx + Math.cos(trailAngle) * orbitRadius;
-        const ty = cy + Math.sin(trailAngle) * orbitRadius;
-        ctx!.beginPath();
-        ctx!.arc(tx, ty, 1.5, 0, Math.PI * 2);
-        ctx!.fillStyle = `${c1}${Math.round((1 - i / 15) * 30).toString(16).padStart(2, "0")}`;
-        ctx!.fill();
-      }
-
-      animRef.current = requestAnimationFrame(draw);
+      ctx.font = "9px system-ui";
+      ctx.fillStyle = "rgba(52, 211, 153, 0.25)";
+      const labelR = (habInnerAU + habOuterAU) / 2 * scale;
+      ctx.fillText("Habitable Zone", cx + labelR * 0.55, cy - labelR * 0.75);
     }
 
-    animRef.current = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(animRef.current);
-  }, [period, starTemp, starRad, planetRad, starColor, c1, habInner, habOuter]);
+    // Draw elliptical orbit path
+    const a = sma * scale; // semi-major in px
+    const b = a * Math.sqrt(1 - ecc * ecc); // semi-minor in px
+    ctx.beginPath();
+    ctx.ellipse(ellCx, ellCy, a, b, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(255,255,255,0.07)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
 
-  const daysPassed = (time * speed > 0 ? timeRef.current : 0) * period;
-  const orbitsCompleted = timeRef.current;
+    // Perihelion marker
+    const periX = cx + sma * (1 - ecc) * scale;
+    ctx.beginPath();
+    ctx.arc(periX, cy, 2, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,255,255,0.15)";
+    ctx.fill();
+    ctx.font = "8px system-ui";
+    ctx.fillStyle = "rgba(255,255,255,0.2)";
+    ctx.fillText("perihelion", periX + 5, cy - 5);
+
+    // Aphelion marker
+    const apX = cx - sma * (1 + ecc) * scale;
+    ctx.beginPath();
+    ctx.arc(apX, cy, 2, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,255,255,0.1)";
+    ctx.fill();
+    ctx.font = "8px system-ui";
+    ctx.fillStyle = "rgba(255,255,255,0.15)";
+    ctx.fillText("aphelion", apX - 40, cy - 5);
+
+    // Star glow
+    const glowR = Math.max(15, starRad * 6);
+    const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
+    gradient.addColorStop(0, starColor);
+    gradient.addColorStop(0.3, starColor + "60");
+    gradient.addColorStop(1, "transparent");
+    ctx.beginPath();
+    ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // Star body
+    const starBodyR = Math.max(4, starRad * 3.5);
+    ctx.beginPath();
+    ctx.arc(cx, cy, starBodyR, 0, Math.PI * 2);
+    ctx.fillStyle = starColor;
+    ctx.fill();
+
+    // Planet position using Kepler's equation
+    const meanAnomaly = (timeRef.current / Math.max(period, 0.001)) * Math.PI * 2;
+    const E = solveKepler(meanAnomaly % (Math.PI * 2), ecc);
+    const theta = trueAnomaly(E, ecc);
+    const r = orbitRadius(sma, ecc, theta);
+    const rPx = r * scale;
+
+    // Planet position relative to star (focus)
+    const px = cx + rPx * Math.cos(theta);
+    const py = cy - rPx * Math.sin(theta); // canvas y is inverted
+
+    // Planet trail
+    const trailCount = 30;
+    for (let i = 1; i <= trailCount; i++) {
+      const tM = meanAnomaly - i * 0.015;
+      const tE = solveKepler(((tM % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2), ecc);
+      const tTheta = trueAnomaly(tE, ecc);
+      const tR = orbitRadius(sma, ecc, tTheta) * scale;
+      const tx = cx + tR * Math.cos(tTheta);
+      const ty = cy - tR * Math.sin(tTheta);
+      const alpha = Math.round((1 - i / trailCount) * 25);
+      ctx.beginPath();
+      ctx.arc(tx, ty, 1.2, 0, Math.PI * 2);
+      ctx.fillStyle = `${c1}${alpha.toString(16).padStart(2, "0")}`;
+      ctx.fill();
+    }
+
+    // Planet body
+    const pSize = Math.max(3, Math.min(10, planetRad * 2.5));
+    const pGrad = ctx.createRadialGradient(px - 1, py - 1, 0, px, py, pSize);
+    pGrad.addColorStop(0, c1 + "ee");
+    pGrad.addColorStop(1, c1 + "33");
+    ctx.beginPath();
+    ctx.arc(px, py, pSize, 0, Math.PI * 2);
+    ctx.fillStyle = pGrad;
+    ctx.fill();
+
+    // Planet label
+    ctx.font = "bold 10px system-ui";
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.fillText(planet.pl_name.split(" ").pop() ?? "", px + pSize + 4, py + 3);
+
+    // Distance line from star to planet
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(px, py);
+    ctx.strokeStyle = "rgba(255,255,255,0.04)";
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Distance label
+    const midX = (cx + px) / 2;
+    const midY = (cy + py) / 2;
+    ctx.font = "8px system-ui";
+    ctx.fillStyle = "rgba(255,255,255,0.2)";
+    ctx.fillText(`${r.toFixed(3)} AU`, midX + 5, midY - 5);
+
+    // Update info
+    const nearPeri = Math.abs(theta % (Math.PI * 2)) < 0.15 || Math.abs(theta % (Math.PI * 2) - Math.PI * 2) < 0.15;
+    setInfo({
+      orbits: timeRef.current / Math.max(period, 0.001),
+      days: timeRef.current,
+      distAU: r,
+      atPeri: nearPeri,
+    });
+  }, [period, ecc, sma, starTemp, starRad, planetRad, starColor, c1, habInnerAU, habOuterAU, planet.pl_name]);
+
+  useEffect(() => {
+    let lastTime = performance.now();
+
+    function loop(now: number) {
+      const dt = (now - lastTime) / 1000;
+      lastTime = now;
+      if (!pausedRef.current) {
+        timeRef.current += dt * speedRef.current;
+      }
+      draw();
+      animRef.current = requestAnimationFrame(loop);
+    }
+
+    animRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [draw]);
 
   return (
     <div className="rounded-2xl border border-border bg-white/[0.02] p-5">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-xs font-semibold uppercase tracking-widest text-foreground/30">
           Orbit Simulator
         </h3>
         <div className="flex items-center gap-2">
-          {[0.25, 0.5, 1, 2, 5].map((s) => (
-            <button
-              key={s}
-              onClick={() => setSpeed(s)}
-              className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition-all ${
-                speed === s
-                  ? "bg-accent/20 text-accent"
-                  : "text-foreground/30 hover:text-foreground/50"
-              }`}
-            >
-              {s}x
-            </button>
-          ))}
+          <button
+            onClick={() => setPaused(!paused)}
+            className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium transition-all ${
+              paused ? "bg-amber/20 text-amber" : "bg-white/5 text-foreground/40"
+            }`}
+          >
+            {paused ? "Play" : "Pause"}
+          </button>
+          <div className="flex items-center rounded-full bg-white/[0.03] p-0.5">
+            {[0.1, 0.5, 1, 3, 10, 50].map((s) => (
+              <button
+                key={s}
+                onClick={() => setSpeed(s)}
+                className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition-all ${
+                  speed === s
+                    ? "bg-accent/20 text-accent"
+                    : "text-foreground/25 hover:text-foreground/50"
+                }`}
+              >
+                {s >= 1 ? `${s}x` : `${s}x`}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       <canvas
         ref={canvasRef}
-        className="h-52 w-full rounded-xl sm:h-64"
+        className="h-56 w-full rounded-xl sm:h-72"
         style={{ background: "transparent" }}
       />
 
-      <div className="mt-3 flex justify-between text-[11px] text-foreground/30">
-        <span>{orbitsCompleted.toFixed(1)} orbits</span>
-        <span>{daysPassed.toFixed(1)} days elapsed</span>
+      {/* Info bar */}
+      <div className="mt-3 grid grid-cols-4 gap-2">
+        <InfoChip label="Orbits" value={info.orbits.toFixed(2)} />
+        <InfoChip label="Days" value={info.days.toFixed(1)} />
+        <InfoChip
+          label="Distance"
+          value={`${info.distAU.toFixed(3)} AU`}
+        />
+        <InfoChip
+          label="Position"
+          value={info.atPeri ? "Perihelion" : "In orbit"}
+          highlight={info.atPeri}
+        />
       </div>
+
+      {/* Orbit stats */}
+      <div className="mt-3 flex flex-wrap gap-3 text-[10px] text-foreground/25">
+        <span>Eccentricity: {ecc.toFixed(4)}</span>
+        <span>Semi-major axis: {sma.toFixed(4)} AU</span>
+        <span>Perihelion: {(sma * (1 - ecc)).toFixed(4)} AU</span>
+        <span>Aphelion: {(sma * (1 + ecc)).toFixed(4)} AU</span>
+      </div>
+    </div>
+  );
+}
+
+function InfoChip({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div className={`rounded-lg px-2.5 py-1.5 ${highlight ? "bg-accent/10" : "bg-white/[0.02]"}`}>
+      <p className="text-[9px] uppercase tracking-wider text-foreground/25">{label}</p>
+      <p className={`font-mono text-[11px] font-medium ${highlight ? "text-accent" : ""}`}>
+        {value}
+      </p>
     </div>
   );
 }
