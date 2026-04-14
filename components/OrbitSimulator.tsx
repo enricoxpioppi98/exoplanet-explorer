@@ -38,6 +38,14 @@ export default function OrbitSimulator({ planet }: { planet: Exoplanet }) {
   const [paused, setPaused] = useState(false);
   const pausedRef = useRef(false);
   pausedRef.current = paused;
+  const [zoom, setZoom] = useState(1);
+  const zoomRef = useRef(1);
+  zoomRef.current = zoom;
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const panRef = useRef({ x: 0, y: 0 });
+  panRef.current = panOffset;
+  const isDragging = useRef(false);
+  const lastMouse = useRef({ x: 0, y: 0 });
 
   const [info, setInfo] = useState({ orbits: 0, days: 0, distAU: 0, atPeri: false });
 
@@ -81,16 +89,17 @@ export default function OrbitSimulator({ planet }: { planet: Exoplanet }) {
     // aphelion = sma * (1 + ecc)
     const aphelion = sma * (1 + ecc);
     const maxExtent = Math.max(aphelion, habOuterAU) * 1.15;
-    const scale = Math.min(w, h) * 0.42 / Math.max(maxExtent, 0.01);
+    const baseScale = Math.min(w, h) * 0.42 / Math.max(maxExtent, 0.01);
+    const scale = baseScale * zoomRef.current;
 
-    // Star at focus, not center of ellipse
-    // Focus offset from center = sma * ecc
+    // Star at focus with pan offset
+    const ox = panRef.current.x;
+    const oy = panRef.current.y;
     const focusOffsetPx = sma * ecc * scale;
-    const cx = w / 2 + focusOffsetPx; // star position
-    const cy = h / 2;
-    // Ellipse center
-    const ellCx = w / 2;
-    const ellCy = h / 2;
+    const cx = w / 2 + focusOffsetPx + ox;
+    const cy = h / 2 + oy;
+    const ellCx = w / 2 + ox;
+    const ellCy = h / 2 + oy;
 
     ctx.clearRect(0, 0, w, h);
 
@@ -245,6 +254,97 @@ export default function OrbitSimulator({ planet }: { planet: Exoplanet }) {
     return () => cancelAnimationFrame(animRef.current);
   }, [draw]);
 
+  // Zoom with mouse wheel
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    function handleWheel(e: WheelEvent) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      setZoom((z) => Math.max(0.2, Math.min(20, z * delta)));
+    }
+
+    function handleMouseDown(e: MouseEvent) {
+      isDragging.current = true;
+      lastMouse.current = { x: e.clientX, y: e.clientY };
+    }
+
+    function handleMouseMove(e: MouseEvent) {
+      if (!isDragging.current) return;
+      const dx = e.clientX - lastMouse.current.x;
+      const dy = e.clientY - lastMouse.current.y;
+      lastMouse.current = { x: e.clientX, y: e.clientY };
+      setPanOffset((p) => ({ x: p.x + dx, y: p.y + dy }));
+    }
+
+    function handleMouseUp() {
+      isDragging.current = false;
+    }
+
+    // Touch support
+    let lastTouchDist = 0;
+    function handleTouchStart(e: TouchEvent) {
+      if (e.touches.length === 1) {
+        isDragging.current = true;
+        lastMouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else if (e.touches.length === 2) {
+        lastTouchDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+      }
+    }
+
+    function handleTouchMove(e: TouchEvent) {
+      e.preventDefault();
+      if (e.touches.length === 1 && isDragging.current) {
+        const dx = e.touches[0].clientX - lastMouse.current.x;
+        const dy = e.touches[0].clientY - lastMouse.current.y;
+        lastMouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        setPanOffset((p) => ({ x: p.x + dx, y: p.y + dy }));
+      } else if (e.touches.length === 2) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        if (lastTouchDist > 0) {
+          const delta = dist / lastTouchDist;
+          setZoom((z) => Math.max(0.2, Math.min(20, z * delta)));
+        }
+        lastTouchDist = dist;
+      }
+    }
+
+    function handleTouchEnd() {
+      isDragging.current = false;
+      lastTouchDist = 0;
+    }
+
+    canvas.addEventListener("wheel", handleWheel, { passive: false });
+    canvas.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
+    canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+    canvas.addEventListener("touchend", handleTouchEnd);
+
+    return () => {
+      canvas.removeEventListener("wheel", handleWheel);
+      canvas.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      canvas.removeEventListener("touchstart", handleTouchStart);
+      canvas.removeEventListener("touchmove", handleTouchMove);
+      canvas.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, []);
+
+  function resetView() {
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
+  }
+
   return (
     <div className="rounded-2xl border border-border bg-white/[0.02] p-5">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -259,6 +359,13 @@ export default function OrbitSimulator({ planet }: { planet: Exoplanet }) {
             }`}
           >
             {paused ? "Play" : "Pause"}
+          </button>
+          <button
+            onClick={resetView}
+            className="rounded-full bg-white/5 px-2.5 py-0.5 text-[10px] font-medium text-foreground/40 transition-all hover:text-foreground/60"
+            title="Reset zoom and pan"
+          >
+            Reset
           </button>
           <div className="flex items-center rounded-full bg-white/[0.03] p-0.5">
             {[0.1, 0.5, 1, 3, 10, 50].map((s) => (
@@ -280,9 +387,12 @@ export default function OrbitSimulator({ planet }: { planet: Exoplanet }) {
 
       <canvas
         ref={canvasRef}
-        className="h-56 w-full rounded-xl sm:h-72"
+        className="h-56 w-full cursor-grab rounded-xl active:cursor-grabbing sm:h-72"
         style={{ background: "transparent" }}
       />
+      <p className="mt-1 text-center text-[10px] text-foreground/20">
+        Scroll to zoom · Drag to pan · {zoom.toFixed(1)}x
+      </p>
 
       {/* Info bar */}
       <div className="mt-3 grid grid-cols-4 gap-2">
