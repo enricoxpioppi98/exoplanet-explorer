@@ -18,17 +18,24 @@ import SizeComparison from "./SizeComparison";
 import PlanetImage from "./PlanetImage";
 import NasaImage from "./NasaImage";
 import CouldYouLiveHere from "./CouldYouLiveHere";
+import SimilarPlanets from "./SimilarPlanets";
+import ShareButton from "./ShareButton";
+import EarthComparison from "./EarthComparison";
 
 export default function PlanetDetailModal({
   planet,
   isSaved,
   onSaveToggle,
   onClose,
+  onSelectPlanet,
+  onCompare,
 }: {
   planet: Exoplanet;
   isSaved: boolean;
   onSaveToggle: () => void;
   onClose: () => void;
+  onSelectPlanet?: (p: Exoplanet) => void;
+  onCompare?: (p: Exoplanet) => void;
 }) {
   const tempColor = getTempColor(planet.pl_eqt);
   const habitScore = getHabitabilityScore(planet);
@@ -84,6 +91,18 @@ export default function PlanetDetailModal({
               </p>
             </div>
             <div className="ml-4 flex shrink-0 items-center gap-1">
+              <ShareButton planet={planet} />
+              {onCompare && (
+                <button
+                  onClick={() => onCompare(planet)}
+                  className="rounded-full p-2 text-foreground/40 transition-colors hover:bg-white/10 hover:text-foreground"
+                  title="Compare with another planet"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                  </svg>
+                </button>
+              )}
               <SaveButton
                 planetName={planet.pl_name}
                 isSaved={isSaved}
@@ -124,6 +143,14 @@ export default function PlanetDetailModal({
             planetName={planet.pl_name}
             temperature={planet.pl_eqt}
           />
+
+          {/* What if Earth Was Here? */}
+          <EarthComparison planet={planet} />
+
+          {/* Similar Planets */}
+          {onSelectPlanet && (
+            <SimilarPlanets planet={planet} onSelect={onSelectPlanet} />
+          )}
 
           {/* Data Sections */}
           <div className="space-y-6">

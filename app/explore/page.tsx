@@ -11,6 +11,7 @@ import PlanetCard from "@/components/PlanetCard";
 import PlanetDetailModal from "@/components/PlanetDetailModal";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import EmptyState from "@/components/EmptyState";
+import PlanetComparison from "@/components/PlanetComparison";
 
 const PAGE_SIZE = 50;
 
@@ -25,6 +26,7 @@ export default function ExplorePage() {
   const [selectedPlanet, setSelectedPlanet] = useState<Exoplanet | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [compareTarget, setCompareTarget] = useState<Exoplanet | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   const buildParams = useCallback((f: FilterState, limit: number) => {
@@ -308,7 +310,14 @@ export default function ExplorePage() {
                       planet={planet}
                       isSaved={savedNames.has(planet.pl_name)}
                       onSaveToggle={() => toggleSave(planet)}
-                      onClick={() => setSelectedPlanet(planet)}
+                      onClick={() => {
+                        if (compareTarget) {
+                          // Second planet selected for comparison
+                          setSelectedPlanet(planet);
+                        } else {
+                          setSelectedPlanet(planet);
+                        }
+                      }}
                     />
                   ))}
                 </div>
@@ -338,6 +347,38 @@ export default function ExplorePage() {
           isSaved={savedNames.has(selectedPlanet.pl_name)}
           onSaveToggle={() => toggleSave(selectedPlanet)}
           onClose={() => setSelectedPlanet(null)}
+          onSelectPlanet={(p) => setSelectedPlanet(p)}
+          onCompare={(p) => {
+            setCompareTarget(p);
+            setSelectedPlanet(null);
+          }}
+        />
+      )}
+
+      {/* Compare Mode — select second planet */}
+      {compareTarget && !selectedPlanet && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-accent/20 bg-background/95 px-6 py-4 text-center backdrop-blur-md">
+          <p className="text-sm text-foreground/60">
+            Click another planet to compare with <strong className="text-foreground">{compareTarget.pl_name}</strong>
+          </p>
+          <button
+            onClick={() => setCompareTarget(null)}
+            className="mt-2 text-xs text-foreground/30 underline hover:text-foreground/50"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {/* Comparison Modal */}
+      {compareTarget && selectedPlanet && (
+        <PlanetComparison
+          planetA={compareTarget}
+          planetB={selectedPlanet}
+          onClose={() => {
+            setCompareTarget(null);
+            setSelectedPlanet(null);
+          }}
         />
       )}
     </div>

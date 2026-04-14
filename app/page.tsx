@@ -2,6 +2,7 @@ import Link from "next/link";
 import StarField from "@/components/StarField";
 import StatsBar from "@/components/StatsBar";
 import Leaderboard from "@/components/Leaderboard";
+import DiscoveryTimeline from "@/components/DiscoveryTimeline";
 
 export default function Home() {
   return (
@@ -50,6 +51,11 @@ export default function Home() {
       {/* Live stats */}
       <section className="relative z-10 mb-20 px-6">
         <StatsBar />
+      </section>
+
+      {/* Discovery Timeline */}
+      <section className="relative z-10 mx-auto mb-20 w-full max-w-3xl px-6">
+        <DiscoveryTimeline />
       </section>
 
       {/* Most Saved Leaderboard */}

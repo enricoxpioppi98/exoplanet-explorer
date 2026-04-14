@@ -142,6 +142,27 @@ export function getTravelTime(
   return { light: fmt(lightYears), probe: fmt(probeYears), voyager: fmt(voyagerYears) };
 }
 
+// Find similar planets by radius + temperature
+export function findSimilarPlanets(
+  target: { pl_name: string; pl_rade: number | null; pl_eqt: number | null },
+  allPlanets: { pl_name: string; pl_rade: number | null; pl_eqt: number | null }[],
+  count: number = 4
+): typeof allPlanets {
+  const tRad = target.pl_rade ?? 1;
+  const tTemp = target.pl_eqt ?? 300;
+
+  return allPlanets
+    .filter((p) => p.pl_name !== target.pl_name)
+    .map((p) => {
+      const radDiff = Math.abs((p.pl_rade ?? 1) - tRad) / Math.max(tRad, 0.1);
+      const tempDiff = Math.abs((p.pl_eqt ?? 300) - tTemp) / Math.max(tTemp, 1);
+      return { planet: p, score: radDiff + tempDiff };
+    })
+    .sort((a, b) => a.score - b.score)
+    .slice(0, count)
+    .map((x) => x.planet);
+}
+
 // Deterministic hash from string
 export function hashString(str: string): number {
   let h = 0;
