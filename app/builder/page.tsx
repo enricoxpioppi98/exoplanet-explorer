@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import StarField from "@/components/StarField";
 import PlanetImage from "@/components/PlanetImage";
 import {
@@ -23,6 +25,49 @@ export default function PlanetBuilderPage() {
   const [distance, setDistance] = useState(10);
   const [starTemp, setStarTemp] = useState(5778);
   const [name, setName] = useState("My Planet");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
+
+  async function handleSave() {
+    if (!isSignedIn) {
+      router.push("/sign-in");
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch("/api/favorites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pl_name: `[Custom] ${name}`,
+          hostname: `${name} Star`,
+          pl_rade: radius,
+          pl_bmasse: mass,
+          pl_eqt: temp,
+          pl_orbper: period,
+          discoverymethod: "Planet Builder",
+          sy_dist: distance,
+          st_teff: starTemp,
+          st_rad: null,
+          st_mass: null,
+          st_spectype: null,
+          disc_year: new Date().getFullYear(),
+          disc_facility: "Exoplanet Explorer",
+          sy_pnum: 1,
+        }),
+      });
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const planet = {
     pl_rade: radius,
@@ -184,6 +229,19 @@ export default function PlanetBuilderPage() {
                    "Uninhabitable"}
                 </p>
               </div>
+
+              {/* Save button */}
+              <button
+                onClick={handleSave}
+                disabled={saving || !name.trim()}
+                className={`w-full rounded-xl py-2.5 text-sm font-semibold transition-all ${
+                  saved
+                    ? "bg-temp-habitable/20 text-temp-habitable"
+                    : "bg-accent/20 text-accent hover:bg-accent/30"
+                } disabled:opacity-40`}
+              >
+                {saved ? "Saved to Favorites!" : saving ? "Saving..." : isSignedIn ? "Save to My Collection" : "Sign In to Save"}
+              </button>
 
               {/* Quick stats */}
               <div className="grid grid-cols-2 gap-2">
