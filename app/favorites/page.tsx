@@ -135,16 +135,60 @@ export default function FavoritesPage() {
             }
           />
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {sorted.map((planet) => (
-              <PlanetCard
-                key={planet.pl_name}
-                planet={toExoplanet(planet)}
-                isSaved={true}
-                onSaveToggle={() => unsave(planet.pl_name)}
-                onClick={() => setSelectedPlanet(toExoplanet(planet))}
-              />
-            ))}
+          <div className="space-y-10">
+            {/* Real exoplanets */}
+            {sorted.filter((p) => !p.pl_name.startsWith("[Custom]")).length > 0 && (
+              <div>
+                <div className="mb-4 flex items-center gap-3">
+                  <h2 className="text-sm font-semibold uppercase tracking-widest text-foreground/30">
+                    Saved Exoplanets
+                  </h2>
+                  <span className="text-xs text-foreground/20">
+                    {sorted.filter((p) => !p.pl_name.startsWith("[Custom]")).length}
+                  </span>
+                </div>
+                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  {sorted
+                    .filter((p) => !p.pl_name.startsWith("[Custom]"))
+                    .map((planet) => (
+                      <PlanetCard
+                        key={planet.pl_name}
+                        planet={toExoplanet(planet)}
+                        isSaved={true}
+                        onSaveToggle={() => unsave(planet.pl_name)}
+                        onClick={() => setSelectedPlanet(toExoplanet(planet))}
+                      />
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* Custom planets */}
+            {sorted.filter((p) => p.pl_name.startsWith("[Custom]")).length > 0 && (
+              <div>
+                <div className="mb-4 flex items-center gap-3">
+                  <h2 className="text-sm font-semibold uppercase tracking-widest text-amber/50">
+                    Your Custom Planets
+                  </h2>
+                  <span className="text-xs text-amber/30">
+                    {sorted.filter((p) => p.pl_name.startsWith("[Custom]")).length}
+                  </span>
+                </div>
+                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  {sorted
+                    .filter((p) => p.pl_name.startsWith("[Custom]"))
+                    .map((planet) => (
+                      <PlanetCard
+                        key={planet.pl_name}
+                        planet={toExoplanet(planet)}
+                        isSaved={true}
+                        onSaveToggle={() => unsave(planet.pl_name)}
+                        onClick={() => setSelectedPlanet(toExoplanet(planet))}
+                      />
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

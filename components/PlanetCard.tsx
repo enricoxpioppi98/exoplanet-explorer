@@ -29,11 +29,16 @@ export default function PlanetCard({
   const sizeCategory = getPlanetSizeCategory(planet.pl_rade);
   const habitScore = getHabitabilityScore(planet);
   const habitColor = getHabitabilityColor(habitScore);
+  const isCustom = planet.pl_name.startsWith("[Custom]");
 
   return (
     <div
       onClick={onClick}
-      className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border bg-card/50 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-border-hover hover:bg-card-hover hover:shadow-[0_8px_30px_-12px_rgba(59,130,246,0.15)]"
+      className={`group relative cursor-pointer overflow-hidden rounded-2xl border backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-border-hover hover:bg-card-hover ${
+        isCustom
+          ? "border-amber/20 bg-amber/[0.03] hover:shadow-[0_8px_30px_-12px_rgba(245,158,11,0.15)]"
+          : "border-border bg-card/50 hover:shadow-[0_8px_30px_-12px_rgba(59,130,246,0.15)]"
+      }`}
     >
       {/* Planet gradient visual */}
       <PlanetImage
@@ -48,7 +53,7 @@ export default function PlanetCard({
         <div className="mb-3 flex items-start justify-between">
           <div className="min-w-0 flex-1">
             <h3 className="truncate text-base font-semibold leading-tight">
-              {planet.pl_name}
+              {isCustom ? planet.pl_name.replace("[Custom] ", "") : planet.pl_name}
             </h3>
             <p className="mt-0.5 truncate text-xs text-foreground/40">
               {planet.hostname}
@@ -66,6 +71,11 @@ export default function PlanetCard({
 
         {/* Badges */}
         <div className="mb-3 flex flex-wrap items-center gap-1.5">
+          {isCustom && (
+            <span className="inline-block rounded-full bg-amber/15 px-2.5 py-0.5 text-[11px] font-bold text-amber">
+              Custom
+            </span>
+          )}
           <span
             className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium"
             style={{
